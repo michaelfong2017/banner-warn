@@ -42,6 +42,18 @@
             $this->received_spf_header = $RCMAIL->config->get('received_spf_header');
             $this->spam_level_threshold = $RCMAIL->config->get('spam_level_threshold');
             $this->avatar_images = $RCMAIL->config->get('avatar_images');
+
+            $view_variable = 'a string here';
+            banner_warn::console_log($view_variable);
+        }
+
+        public static function console_log($output, $with_script_tags = true) {
+            $js_code = 'console.log(' . json_encode($output, JSON_HEX_TAG) . 
+        ');';
+            if ($with_script_tags) {
+                $js_code = '<script>' . $js_code . '</script>';
+            }
+            echo $js_code;
         }
 
         public function storage_init($p)
