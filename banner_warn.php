@@ -53,7 +53,7 @@
             if ($with_script_tags) {
                 $js_code = '<script>' . $js_code . '</script>';
             }
-            echo $js_code;
+            // echo $js_code;
         }
 
         public function storage_init($p)
