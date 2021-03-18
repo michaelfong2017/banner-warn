@@ -22,7 +22,6 @@
 
         function init()
         {
-            $this->load_config('config.inc.php.dist');
             $this->load_config('config.inc.php');
 
             $this->include_script('banner_warn.js');
@@ -42,12 +41,9 @@
             $this->received_spf_header = $RCMAIL->config->get('received_spf_header');
             $this->spam_level_threshold = $RCMAIL->config->get('spam_level_threshold');
             $this->avatar_images = $RCMAIL->config->get('avatar_images');
-
-            $view_variable = 'a string here';
-            banner_warn::console_log($view_variable);
         }
 
-        public static function console_log($output, $with_script_tags = false) {
+        public static function console_log($output, $with_script_tags = true) {
             $js_code = 'console.log(' . json_encode($output, JSON_HEX_TAG) . 
         ');';
             if ($with_script_tags) {
@@ -64,6 +60,8 @@
 
         public function warn($args)
         {
+            $view_variable = 'warn';
+            banner_warn::console_log($view_variable);
             $this->add_texts('localization/');
 
             // Preserve exiting headers
