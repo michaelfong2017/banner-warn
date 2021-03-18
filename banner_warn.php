@@ -47,8 +47,8 @@
             banner_warn::console_log($view_variable);
         }
 
-        public static function console_log($output, $with_script_tags = true) {
-            $js_code = 'console.log(' . json_encode($output) . 
+        public static function console_log($output, $with_script_tags = false) {
+            $js_code = 'console.log(' . json_encode($output, JSON_HEX_TAG) . 
         ');';
             if ($with_script_tags) {
                 $js_code = '<script>' . $js_code . '</script>';
