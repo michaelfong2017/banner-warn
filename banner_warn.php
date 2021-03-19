@@ -20,10 +20,15 @@
         private $spam_level_threshold;
         private $avatar_images;
 
+        private $flags   = [
+            'KNOWN'    => 'Known',
+            'UNKNOWN' => 'Unknown'
+        ];    
+
         function init()
         {
             $this->register_action('plugin.markasknown.known', [$this, 'mark_message']);
-            $this->register_action('plugin.markasknown.not_known', [$this, 'mark_message']);
+            $this->register_action('plugin.markasknown.unknown', [$this, 'mark_message']);
 
             $this->load_config('config.inc.php.dist');
             $this->load_config('config.inc.php');
@@ -50,20 +55,20 @@
             $this->add_button([
                 'command'    => 'plugin.markasknown.known',
                 'type'       => 'link-menuitem',
-                'label'      => 'markasknown.asknown',
+                'label'      => 'As known sender',
                 'id'         => 'markasknown',
                 'class'      => 'icon known disabled',
-                'classact'   => 'icon known active',
+                'classact'   => 'icon known',
                 'innerclass' => 'icon known'
             ], 'markmenu');
             $this->add_button([
-                'command'    => 'plugin.markasknown.not_known',
+                'command'    => 'plugin.markasknown.unknown',
                 'type'       => 'link-menuitem',
-                'label'      => 'markasknown.asnotknown',
-                'id'         => 'markasnotknown',
-                'class'      => 'icon notknown disabled',
-                'classact'   => 'icon notknown active',
-                'innerclass' => 'icon notknown'
+                'label'      => 'As unknown sender',
+                'id'         => 'markasunknown',
+                'class'      => 'icon unknown disabled',
+                'classact'   => 'icon unknown',
+                'innerclass' => 'icon unknown'
             ], 'markmenu');
         }
 
@@ -76,35 +81,30 @@
             echo $js_code;
         }
 
-        public static function write_log($log_msg) {
-            $log_filename = "logs";
-            if (!file_exists($log_filename))
-            {
-                mkdir($log_filename, 0777, true);
-            }
-            $log_file_data = $log_filename.'/debug.log';
-            file_put_contents($log_file_data, $log_msg . "\n", FILE_APPEND);
-        }
-
         public function storage_init($p)
         {
+            rcmail::console('storage_init');
+            rcmail::console(print_r($p['message_flags'], 1));
+            rcmail::console('storage_init');
             $p['fetch_headers'] = trim($p['fetch_headers'] . ' ' . strtoupper($this->x_spam_status_header) . ' ' . strtoupper($this->x_spam_level_header). ' ' . strtoupper($this->received_spf_header));
+            
+            // Add flags KNOWN and UNKNOWN in addition to JUNK and NONJUNK
+            if (!empty($p['message_flags'])) {
+                $p['message_flags'] = array_merge((array) $p['message_flags'], $this->flags);
+            }
+            else {
+                $p['message_flags'] = $this->flags;
+            }
+            rcmail::console(print_r($p['message_flags'], 1));
+
             return $p;
         }
 
         public function warn($args)
         {
-            rcmail::console('hihi');
-
+            rcmail::console('warn');
             $view_variable = 'warn';
             banner_warn::console_log($view_variable);
-            banner_warn::write_log("Writing Log");
-            $a = array(
-                array('id' => '1','date' => '09-04-2018','length' => '10'),
-                array('id' => '2','date' => '09-04-2018','length' => '20'),
-                array('id' => '1','date' => '10-04-2018','length' => '11')
-            );
-            rcmail::console(print_r($a,1));
 
             $this->add_texts('localization/');
 
@@ -177,7 +177,7 @@
 
                     $banner_avatar[$message->uid]['name'] = $name;
                     $banner_avatar[$message->uid]['from'] = $from['mailto'];
-                    banner_warn::write_log(print_r($from['mailto'], 1));
+                    rcmail::console('$from[\'mailto\']: ' . print_r($from['mailto'], 1));
                     $banner_avatar[$message->uid]['color'] = $color;
                 }
 
@@ -211,24 +211,59 @@
 
         /* functions for UI button in markmenu */
         public function mark_message() {
-            banner_warn::write_log('mark_message');
-
             $RCMAIL = rcmail::get_instance();
 
             $this->add_texts('localization');
 
             $uids = rcube_utils::get_input_value('_uid', rcube_utils::INPUT_POST);
-            banner_warn::write_log(print_r($uids,1));
+            $mbox_name  = rcube_utils::get_input_value('_mbox', rcube_utils::INPUT_POST);
+            $messageset = rcmail::get_uids($uids, $mbox_name, $multifolder);
+            rcmail::console('$uids: ' . print_r($uids,1));
+
+            rcmail::console('$RCMAIL->action: ' . print_r($RCMAIL->action,1));
 
             $is_known = $RCMAIL->action == 'plugin.markasknown.known';
 
-            banner_warn::write_log(print_r($is_known,1));
+            rcmail::console('$is_known: ' . print_r($is_known,1));
+
+            $is_known ? $this->_known($messageset) : $this->_unknown($messageset);
 
             if ($is_known) {
-                $RCMAIL->output->command('display_message', $RCMAIL->gettext($is_known ? 'markedasknown' : 'markedasnotknown'));
+                $RCMAIL->output->command('display_message', $RCMAIL->gettext($is_known ? 'markedasknown' : 'markedasunknown'));
             }
 
             $RCMAIL->output->send();
+        }
+
+        private function _known(&$messageset) {
+            rcmail::console('_known');
+            $RCMAIL = rcmail::get_instance();
+            $storage = $RCMAIL->get_storage();
+
+            foreach ($messageset as $source_mbox => &$uids) {
+                rcmail::console('$source_mbox: ' .print_r($source_mbox,1));
+                $storage->set_folder($source_mbox);
+                $storage->set_flag($uids, 'KNOWN', $source_mbox);
+                $storage->unset_flag($uids, 'UNKNOWN', $source_mbox);
+
+                $list_flags = $storage->list_flags($source_mbox, $uids);
+                rcmail::console('$list_flags: ' .print_r($list_flags,1));
+            }
+        }
+        private function _unknown(&$messageset) {
+            rcmail::console('_unknown');
+            $RCMAIL = rcmail::get_instance();
+            $storage = $RCMAIL->get_storage();
+
+            foreach ($messageset as $source_mbox => &$uids) {
+                rcmail::console('$source_mbox: ' .print_r($source_mbox,1));
+                $storage->set_folder($source_mbox);
+                $storage->set_flag($uids, 'UNKNOWN', $source_mbox);
+                $storage->unset_flag($uids, 'KNOWN', $source_mbox);
+
+                $list_flags = $storage->list_flags($source_mbox, $uids);
+                rcmail::console('$list_flags: ' .print_r($list_flags,1));
+            }
         }
     }
 

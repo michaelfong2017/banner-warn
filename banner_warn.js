@@ -56,12 +56,19 @@ rcube_webmail.prototype.markasknown_mark = function(is_known) {
 
     var lock = this.set_busy(true, 'loading');
     console.log(lock)
-    this.http_post('plugin.markasknown.' + (is_known ? 'known' : 'not_known'), this.selection_post_data({_uid: uids}), lock);
+    this.http_post('plugin.markasknown.' + (is_known ? 'known' : 'unknown'), this.selection_post_data({_uid: uids}), lock);
 }
 
 window.rcmail && rcmail.addEventListener('init', function(evt) {
-        rcmail.register_command('plugin.markasknown.known', function() { rcmail.markasknown_mark(true); }, true);
-        rcmail.register_command('plugin.markasknown.not_known', function() { rcmail.markasknown_mark(false); }, true);
+        console.log(rcmail.env.uid)
+        rcmail.register_command('plugin.markasknown.known', function() { rcmail.markasknown_mark(true); }, rcmail.env.uid);
+        rcmail.register_command('plugin.markasknown.unknown', function() { rcmail.markasknown_mark(false); }, rcmail.env.uid);
+        $("#markasknown").find('span').text((index, currentcontent) => {
+            return currentcontent.replace(/[\[\]']+/g,'')
+        })
+        $("#markasunknown").find('span').text((index, currentcontent) => {
+            return currentcontent.replace(/[\[\]']+/g,'')
+        })
 
         if (rcmail.gui_objects.messagelist) {
             rcmail.addEventListener('insertrow', banner_warn.insertrow);
@@ -75,5 +82,20 @@ window.rcmail && rcmail.addEventListener('init', function(evt) {
                 }
                 _hrow(...args);
             }
+
+            rcmail.message_list.addEventListener('select', function(list) {
+                console.log(list)
+                rcmail.enable_command('plugin.markasknown.known', list.get_selection(false).length > 0);
+                rcmail.enable_command('plugin.markasknown.unknown', list.get_selection(false).length > 0);
+
+                if (list.get_selection(false).length > 0) {
+                    $("#markasknown").addClass("active")
+                    $("#markasunknown").addClass("active")
+                }
+                else {
+                    $("#markasknown").removeClass("active")
+                    $("#markasunknown").removeClass("active")
+                }
+            });
         }
 });
