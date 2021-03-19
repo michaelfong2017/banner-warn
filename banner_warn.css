@@ -110,3 +110,10 @@ th.banner-warn {
     border-radius: 0;
 }
 
+/* markmenu new buttons */
+ul.toolbarmenu li span.known {
+    background-position: -2px -792px;
+}
+ul.toolbarmenu li span.unknown {
+    background-position: -2px -768px;
+}

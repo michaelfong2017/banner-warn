@@ -228,8 +228,9 @@
 
             $is_known ? $this->_known($messageset) : $this->_unknown($messageset);
 
-            if ($is_known) {
-                $RCMAIL->output->command('display_message', $RCMAIL->gettext($is_known ? 'markedasknown' : 'markedasunknown'));
+            if (!is_null($is_known)) {
+                $display_message = 'Sender(s) address marked as ' . ($is_known ? 'known' : 'unknown') . ' successfully.';
+                $RCMAIL->output->command('display_message', $RCMAIL->gettext($display_message));
             }
 
             $RCMAIL->output->send();
