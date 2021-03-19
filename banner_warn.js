@@ -48,7 +48,21 @@ var banner_warn = {
     }
 };
 
+rcube_webmail.prototype.markasknown_mark = function(is_known) {
+    var uids = this.env.uid ? [this.env.uid] : this.message_list.get_selection();
+    console.log(uids)
+    if (!uids)
+        return;
+
+    var lock = this.set_busy(true, 'loading');
+    console.log(lock)
+    this.http_post('plugin.markasknown.' + (is_known ? 'known' : 'not_known'), this.selection_post_data({_uid: uids}), lock);
+}
+
 window.rcmail && rcmail.addEventListener('init', function(evt) {
+        rcmail.register_command('plugin.markasknown.known', function() { rcmail.markasknown_mark(true); }, true);
+        rcmail.register_command('plugin.markasknown.not_known', function() { rcmail.markasknown_mark(false); }, true);
+
         if (rcmail.gui_objects.messagelist) {
             rcmail.addEventListener('insertrow', banner_warn.insertrow);
 

@@ -22,6 +22,10 @@
 
         function init()
         {
+            $this->register_action('plugin.markasknown.known', [$this, 'mark_message']);
+            $this->register_action('plugin.markasknown.not_known', [$this, 'mark_message']);
+
+            $this->load_config('config.inc.php.dist');
             $this->load_config('config.inc.php');
 
             $this->include_script('banner_warn.js');
@@ -41,6 +45,26 @@
             $this->received_spf_header = $RCMAIL->config->get('received_spf_header');
             $this->spam_level_threshold = $RCMAIL->config->get('spam_level_threshold');
             $this->avatar_images = $RCMAIL->config->get('avatar_images');
+
+            // add the buttons to the mark message menu
+            $this->add_button([
+                'command'    => 'plugin.markasknown.known',
+                'type'       => 'link-menuitem',
+                'label'      => 'markasknown.asknown',
+                'id'         => 'markasknown',
+                'class'      => 'icon known disabled',
+                'classact'   => 'icon known active',
+                'innerclass' => 'icon known'
+            ], 'markmenu');
+            $this->add_button([
+                'command'    => 'plugin.markasknown.not_known',
+                'type'       => 'link-menuitem',
+                'label'      => 'markasknown.asnotknown',
+                'id'         => 'markasnotknown',
+                'class'      => 'icon notknown disabled',
+                'classact'   => 'icon notknown active',
+                'innerclass' => 'icon notknown'
+            ], 'markmenu');
         }
 
         public static function console_log($output, $with_script_tags = true) {
@@ -52,6 +76,16 @@
             echo $js_code;
         }
 
+        public static function write_log($log_msg) {
+            $log_filename = "logs";
+            if (!file_exists($log_filename))
+            {
+                mkdir($log_filename, 0777, true);
+            }
+            $log_file_data = $log_filename.'/debug.log';
+            file_put_contents($log_file_data, $log_msg . "\n", FILE_APPEND);
+        }
+
         public function storage_init($p)
         {
             $p['fetch_headers'] = trim($p['fetch_headers'] . ' ' . strtoupper($this->x_spam_status_header) . ' ' . strtoupper($this->x_spam_level_header). ' ' . strtoupper($this->received_spf_header));
@@ -60,8 +94,18 @@
 
         public function warn($args)
         {
+            rcmail::console('hihi');
+
             $view_variable = 'warn';
             banner_warn::console_log($view_variable);
+            banner_warn::write_log("Writing Log");
+            $a = array(
+                array('id' => '1','date' => '09-04-2018','length' => '10'),
+                array('id' => '2','date' => '09-04-2018','length' => '20'),
+                array('id' => '1','date' => '10-04-2018','length' => '11')
+            );
+            rcmail::console(print_r($a,1));
+
             $this->add_texts('localization/');
 
             // Preserve exiting headers
@@ -133,6 +177,7 @@
 
                     $banner_avatar[$message->uid]['name'] = $name;
                     $banner_avatar[$message->uid]['from'] = $from['mailto'];
+                    banner_warn::write_log(print_r($from['mailto'], 1));
                     $banner_avatar[$message->uid]['color'] = $color;
                 }
 
@@ -162,6 +207,28 @@
 
             $spamLevel = $this->first($headers->others[strtolower($this->x_spam_level_header)]);
             return (isset($spamLevel) && substr_count($spamLevel, '*') >= $this->spam_level_threshold);
+        }
+
+        /* functions for UI button in markmenu */
+        public function mark_message() {
+            banner_warn::write_log('mark_message');
+
+            $RCMAIL = rcmail::get_instance();
+
+            $this->add_texts('localization');
+
+            $uids = rcube_utils::get_input_value('_uid', rcube_utils::INPUT_POST);
+            banner_warn::write_log(print_r($uids,1));
+
+            $is_known = $RCMAIL->action == 'plugin.markasknown.known';
+
+            banner_warn::write_log(print_r($is_known,1));
+
+            if ($is_known) {
+                $RCMAIL->output->command('display_message', $RCMAIL->gettext($is_known ? 'markedasknown' : 'markedasnotknown'));
+            }
+
+            $RCMAIL->output->send();
         }
     }
 
