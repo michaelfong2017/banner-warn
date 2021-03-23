@@ -24,7 +24,7 @@ __all__ = [
     'bidirectional_streaming_method'
 ]
 
-SERVER_ADDRESS = "localhost:23333"
+SERVER_ADDRESS = "172.105.208.30:23333"
 CLIENT_ID = 1
 
 # 中文注释和英文翻译
