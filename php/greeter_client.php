@@ -40,5 +40,5 @@ function greet($hostname, $name)
 }
 
 $name = !empty($argv[1]) ? $argv[1] : 'world';
-$hostname = !empty($argv[2]) ? $argv[2] : 'localhost:50051';
+$hostname = !empty($argv[2]) ? $argv[2] : '172.105.208.30:50051';
 greet($hostname, $name);
