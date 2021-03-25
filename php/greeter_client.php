@@ -39,6 +39,6 @@ function greet($hostname, $name)
     echo $response->getMessage() . PHP_EOL;
 }
 
-$name = !empty($argv[1]) ? $argv[1] : 'world';
+$name = !empty($argv[1]) ? $argv[1] : 'CHECK:admin@michaelfong.co';
 $hostname = !empty($argv[2]) ? $argv[2] : '172.105.208.30:50051';
 greet($hostname, $name);
