@@ -84,7 +84,6 @@ window.rcmail && rcmail.addEventListener('init', function(evt) {
             }
 
             rcmail.message_list.addEventListener('select', function(list) {
-                console.log(list)
                 rcmail.enable_command('plugin.markasknown.known', list.get_selection(false).length > 0);
                 rcmail.enable_command('plugin.markasknown.unknown', list.get_selection(false).length > 0);
 
