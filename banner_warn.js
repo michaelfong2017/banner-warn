@@ -54,13 +54,20 @@ rcube_webmail.prototype.markasknown_mark = function(is_known) {
     if (!uids)
         return;
 
+    var senders = []
+    uids.forEach((uid) => {
+        var sender = rcmail.env.banner_avatar[uid]['from']
+        console.log(sender)
+        senders.push(sender)
+    })
+    
+    
     var lock = this.set_busy(true, 'loading');
     console.log(lock)
-    this.http_post('plugin.markasknown.' + (is_known ? 'known' : 'unknown'), this.selection_post_data({_uid: uids}), lock);
+    this.http_post('plugin.markasknown.' + (is_known ? 'known' : 'unknown'), this.selection_post_data({_uid: uids, _senders: senders}), lock);
 }
 
 window.rcmail && rcmail.addEventListener('init', function(evt) {
-        console.log(rcmail.env.uid)
         rcmail.register_command('plugin.markasknown.known', function() { rcmail.markasknown_mark(true); }, rcmail.env.uid);
         rcmail.register_command('plugin.markasknown.unknown', function() { rcmail.markasknown_mark(false); }, rcmail.env.uid);
         $("#markasknown").find('span').text((index, currentcontent) => {
