@@ -21,6 +21,8 @@ import grpc
 import helloworld_pb2
 import helloworld_pb2_grpc
 
+import sys
+sender_address = sys.argv[1]
 
 def run():
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
@@ -28,8 +30,8 @@ def run():
     # of the code.
     with grpc.insecure_channel('172.105.208.30:50051') as channel:
         stub = helloworld_pb2_grpc.GreeterStub(channel)
-        response = stub.SayHello(helloworld_pb2.HelloRequest(name='you'))
-    print("Greeter client received: " + response.message)
+        response = stub.SayHello(helloworld_pb2.HelloRequest(name=f'CHECK:{sender_address}'))
+    print(response.message)
 
 
 if __name__ == '__main__':

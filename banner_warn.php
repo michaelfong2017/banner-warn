@@ -118,7 +118,14 @@
             }
 
             // Warn users if mail from outside organization
-            if ($this->addressExternal($message->sender['mailto'])) {
+            $sender_address = $message->sender['mailto'];
+            rcmail::console($sender_address);
+
+            $command = 'cd plugins/banner_warn/helloworld; python3 start.py ' . $sender_address;
+            $output = exec($command);
+            rcmail::console($output);
+
+            if (substr($output, 0, strlen('KNOWN')) !== 'KNOWN') { // case-sensitive
                 array_push($content, '<div class="notice warning">' . $this->gettext('from_outsite') . '</div>');
             }
 
