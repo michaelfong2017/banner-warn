@@ -83,28 +83,15 @@
 
         public function storage_init($p)
         {
-            rcmail::console('storage_init');
-            rcmail::console(print_r($p['message_flags'], 1));
-            rcmail::console('storage_init');
             $p['fetch_headers'] = trim($p['fetch_headers'] . ' ' . strtoupper($this->x_spam_status_header) . ' ' . strtoupper($this->x_spam_level_header). ' ' . strtoupper($this->received_spf_header));
-            
-            // Add flags KNOWN and UNKNOWN in addition to JUNK and NONJUNK
-            if (!empty($p['message_flags'])) {
-                $p['message_flags'] = array_merge((array) $p['message_flags'], $this->flags);
-            }
-            else {
-                $p['message_flags'] = $this->flags;
-            }
-            rcmail::console(print_r($p['message_flags'], 1));
-
             return $p;
         }
 
         public function warn($args)
         {
-            rcmail::console('warn');
+            // rcmail::console('warn');
             $view_variable = 'warn';
-            banner_warn::console_log($view_variable);
+            // banner_warn::console_log($view_variable);
 
             $this->add_texts('localization/');
 
@@ -182,7 +169,7 @@
 
                     $banner_avatar[$message->uid]['name'] = $name;
                     $banner_avatar[$message->uid]['from'] = $from['mailto'];
-                    rcmail::console('$from[\'mailto\']: ' . print_r($from['mailto'], 1));
+                    // rcmail::console('$from[\'mailto\']: ' . print_r($from['mailto'], 1));
                     $banner_avatar[$message->uid]['color'] = $color;
                 }
 
@@ -222,16 +209,16 @@
 
             $uids = rcube_utils::get_input_value('_uid', rcube_utils::INPUT_POST);
             $senders = rcube_utils::get_input_value('_senders', rcube_utils::INPUT_POST);
-            rcmail::console('$senders: ' . print_r($senders,1));
+            // rcmail::console('$senders: ' . print_r($senders,1));
             $mbox_name  = rcube_utils::get_input_value('_mbox', rcube_utils::INPUT_POST);
             $messageset = rcmail::get_uids($uids, $mbox_name, $multifolder);
-            rcmail::console('$uids: ' . print_r($uids,1));
+            // rcmail::console('$uids: ' . print_r($uids,1));
 
-            rcmail::console('$RCMAIL->action: ' . print_r($RCMAIL->action,1));
+            // rcmail::console('$RCMAIL->action: ' . print_r($RCMAIL->action,1));
 
             $is_known = $RCMAIL->action == 'plugin.markasknown.known';
 
-            rcmail::console('$is_known: ' . print_r($is_known,1));
+            // rcmail::console('$is_known: ' . print_r($is_known,1));
 
             $is_known ? $this->_known($messageset, $senders) : $this->_unknown($messageset, $senders);
 
@@ -244,60 +231,30 @@
         }
 
         private function _known(&$messageset, &$senders) {
-            rcmail::console('_known');
+            // rcmail::console('_known');
             $RCMAIL = rcmail::get_instance();
-            $storage = $RCMAIL->get_storage();
 
             foreach ($messageset as $source_mbox => &$uids) {
-                rcmail::console('$source_mbox: ' .print_r($source_mbox,1));
-                $storage->set_folder($source_mbox);
-                $storage->set_flag($uids, 'KNOWN', $source_mbox);
-                $storage->unset_flag($uids, 'UNKNOWN', $source_mbox);
-
-                $list_flags = $storage->list_flags($source_mbox, $uids);
-                rcmail::console('$list_flags: ' .print_r($list_flags,1));
-
-                // log only
-                for ($i = 0; $i < count($uids); $i++) {
-                    $uid = $uids[$i];
-                    $sender = $senders[$i];
-                    rcmail::console('$uid: ' .print_r($uid,1));
-                    rcmail::console('$sender: ' .print_r($sender,1));
-                }
+                // rcmail::console('$source_mbox: ' .print_r($source_mbox,1));
 
                 $task = 'SETKNOWN';
                 $sender_addresses = implode(";", $senders);
                 $command = 'cd plugins/banner_warn/helloworld;' . escapeshellcmd('python3 start.py ' . $task . ' ' . $sender_addresses);
-                rcmail::console('$command: ' .print_r($command,1));
+                // rcmail::console('$command: ' .print_r($command,1));
                 $output = exec($command);
             }
         }
         private function _unknown(&$messageset, &$senders) {
-            rcmail::console('_unknown');
+            // rcmail::console('_unknown');
             $RCMAIL = rcmail::get_instance();
-            $storage = $RCMAIL->get_storage();
 
             foreach ($messageset as $source_mbox => &$uids) {
-                rcmail::console('$source_mbox: ' .print_r($source_mbox,1));
-                $storage->set_folder($source_mbox);
-                $storage->set_flag($uids, 'UNKNOWN', $source_mbox);
-                $storage->unset_flag($uids, 'KNOWN', $source_mbox);
-
-                $list_flags = $storage->list_flags($source_mbox, $uids);
-                rcmail::console('$list_flags: ' .print_r($list_flags,1));
-
-                // log only
-                for ($i = 0; $i < count($uids); $i++) {
-                    $uid = $uids[$i];
-                    $sender = $senders[$i];
-                    rcmail::console('$uid: ' .print_r($uid,1));
-                    rcmail::console('$sender: ' .print_r($sender,1));
-                }
+                // rcmail::console('$source_mbox: ' .print_r($source_mbox,1));
 
                 $task = 'SETUNKNOWN';
                 $sender_addresses = implode(";", $senders);
                 $command = 'cd plugins/banner_warn/helloworld;' . escapeshellcmd('python3 start.py ' . $task . ' ' . $sender_addresses);
-                rcmail::console('$command: ' .print_r($command,1));
+                // rcmail::console('$command: ' .print_r($command,1));
                 $output = exec($command);
             }
         }

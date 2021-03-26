@@ -50,20 +50,20 @@ var banner_warn = {
 
 rcube_webmail.prototype.markasknown_mark = function(is_known) {
     var uids = this.env.uid ? [this.env.uid] : this.message_list.get_selection();
-    console.log(uids)
+    // console.log(uids)
     if (!uids)
         return;
 
     var senders = []
     uids.forEach((uid) => {
         var sender = rcmail.env.banner_avatar[uid]['from']
-        console.log(sender)
+        // console.log(sender)
         senders.push(sender)
     })
     
     
     var lock = this.set_busy(true, 'loading');
-    console.log(lock)
+    // console.log(lock)
     this.http_post('plugin.markasknown.' + (is_known ? 'known' : 'unknown'), this.selection_post_data({_uid: uids, _senders: senders}), lock);
 }
 
