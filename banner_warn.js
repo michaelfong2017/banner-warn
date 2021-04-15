@@ -62,7 +62,9 @@ rcube_webmail.prototype.markasknown_mark = function(is_known, _sender) {
             senders.push(sender)
         }
         else {
-            senders.push(_sender)
+            if (_sender) {
+                senders.push(_sender)
+            }
         }
     })
     
@@ -70,6 +72,23 @@ rcube_webmail.prototype.markasknown_mark = function(is_known, _sender) {
     var lock = this.set_busy(true, 'loading');
     // console.log(lock)
     this.http_post('plugin.markasknown.' + (is_known ? 'known' : 'unknown'), this.selection_post_data({_uid: uids, _senders: senders}), lock);
+}
+
+rcube_webmail.prototype.markasknown_report = function(_uid, _sender) {
+    var lock = this.set_busy(true, 'loading');
+    this.http_post('plugin.markasknown.report', this.selection_post_data({_uid: _uid, _sender: _sender}), lock);
+}
+
+rcube_webmail.prototype.rcmail_markasjunk2_move = function(mbox, uids) {
+    var prev_uid = this.env.uid, a_uids = $.isArray(uids) ? uids : uids.split(",");
+
+    if (this.message_list && a_uids.length == 1 && !this.message_list.in_selection([a_uids[0]]))
+        this.env.uid = a_uids[0];
+
+    if (mbox)
+        this.move_messages(mbox);
+
+    this.env.uid = prev_uid;
 }
 
 window.rcmail && rcmail.addEventListener('init', function(evt) {
@@ -111,10 +130,14 @@ window.rcmail && rcmail.addEventListener('init', function(evt) {
         }
 
         /* yes/no button for recognizing sender */
+        let uid = $('.no-button').attr('uid')
+        let sender = $('.yes-button').attr('sender')
         $('.yes-button').click(function() {
-            rcmail.markasknown_mark(true, $('.yes-button').attr('sender'));
+            rcmail.markasknown_mark(true, sender);
         });
         $('.no-button').click(function() {
-            rcmail.markasknown_mark(false, $('.no-button').attr('sender'));
+            $(".notice.warning").addClass("reported")
+            $(".notice.warning").text("Reported as spam!")
+            rcmail.markasknown_report(uid, sender);
         });
 });

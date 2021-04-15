@@ -20,15 +20,16 @@
         private $spam_level_threshold;
         private $avatar_images;
 
-        private $flags   = [
-            'KNOWN'    => 'Known',
-            'UNKNOWN' => 'Unknown'
-        ];    
+        private $flags = array(
+            'JUNK'    => 'Junk',
+            'NONJUNK' => 'NonJunk'
+        ); 
 
         function init()
         {
             $this->register_action('plugin.markasknown.known', [$this, 'mark_message']);
             $this->register_action('plugin.markasknown.unknown', [$this, 'mark_message']);
+            $this->register_action('plugin.markasknown.report', [$this, 'report_message']);
 
             $this->load_config('config.inc.php.dist');
             $this->load_config('config.inc.php');
@@ -84,6 +85,7 @@
         public function storage_init($p)
         {
             $p['fetch_headers'] = trim($p['fetch_headers'] . ' ' . strtoupper($this->x_spam_status_header) . ' ' . strtoupper($this->x_spam_level_header). ' ' . strtoupper($this->received_spf_header));
+            $p['message_flags'] = array_merge((array) $p['message_flags'], $this->flags);
             return $p;
         }
 
@@ -106,15 +108,31 @@
 
             // Warn users if mail from outside organization
             $task = 'CHECK';
+            $uid = $message->uid;
             $sender_address = $message->sender['mailto'];
+            $mbox_name  = rcube_utils::get_input_value('_mbox', rcube_utils::INPUT_GET);
+
+            // $RCMAIL = rcmail::get_instance();
+            // $storage = $RCMAIL->get_storage();
+            // $source_mbox = 'INBOX';
+            // $flags = $storage->list_flags($source_mbox, [$uid]);
+            
             $command = 'cd plugins/banner_warn/helloworld;' . escapeshellcmd('python3 start.py ' . $task . ' ' . $sender_address);
             $output = exec($command);
 
             if (substr($output, 0, strlen('KNOWN')) !== 'KNOWN') { // case-sensitive
-                array_push($content, '<div class="notice warning" style="white-space: pre-wrap;">' . $sender_address . " originated from outside of your organization. Do not click links or open attachments unless you recognize the sender and know the content is safe.\n\nWould you like to recognize and trust " . $sender_address . "?"
-                . '<button class="yes-button" sender=' . $sender_address . ' type="button">Yes</button>'
-                . '<button class="no-button" sender=' . $sender_address . ' type="button">No</button>'
-                . '</div>');
+                if ($mbox_name !== 'Drafts' && $mbox_name !== 'Sent') {
+                    if ($mbox_name === 'Junk' || $mbox_name === 'Trash') {
+                        array_push($content, '<div class="notice warning reported" style="white-space: pre-wrap;">' . "Reported as spam!" . '</div>');
+                    }
+                    // INBOX only by default
+                    else {
+                        array_push($content, '<div class="notice warning" style="white-space: pre-wrap;">' . $sender_address . " originated from outside of your organization. Do not click links or open attachments unless you recognize the sender and know the content is safe.\n\nWould you like to recognize and trust " . $sender_address . "?"
+                        . '<button class="yes-button" uid=' . $uid . ' sender=' . $sender_address . ' type="button">Yes</button>'
+                        . '<button class="no-button" uid=' . $uid . ' sender=' . $sender_address . ' type="button">No</button>'
+                        . '</div>');
+                    }
+                }
             }
 
             // Check X-Spam-Status
@@ -260,6 +278,54 @@
                 // rcmail::console('$command: ' .print_r($command,1));
                 $output = exec($command);
             }
+        }
+
+        public function report_message() {
+            // rcmail::console('report_message');
+            $RCMAIL = rcmail::get_instance();
+
+            $uid = rcube_utils::get_input_value('_uid', rcube_utils::INPUT_POST);
+            $sender = rcube_utils::get_input_value('_sender', rcube_utils::INPUT_POST);
+            // rcmail::console('$uid: ' . print_r($uid,1));
+            // rcmail::console('$sender: ' . print_r($sender,1));
+            $mbox_name  = rcube_utils::get_input_value('_mbox', rcube_utils::INPUT_POST);
+            $messageset = rcmail::get_uids($uids, $mbox_name, $multifolder);
+
+            /* Set flag */
+            $storage = $RCMAIL->get_storage();
+
+            foreach ($messageset as $source_mbox => &$uids) {
+                $storage->set_folder($source_mbox);
+
+                if (array_key_exists('JUNK', $this->flags)) {
+                    $storage->set_flag($uid, 'JUNK', $source_mbox);
+                }
+            }
+
+            /* Display message */
+            $display_message = 'Moving message to Junk box...';
+            $RCMAIL->output->command('display_message', $RCMAIL->gettext($display_message));
+
+            /* Move to the junk box */
+            $dest_mbox = 'Junk';
+
+            if ($dest_mbox && ($mbox_name !== $dest_mbox || $multifolder)) {
+                $RCMAIL->output->command('rcmail_markasjunk2_move', $dest_mbox, $this->_messageset_to_uids($messageset, $multifolder));
+            }
+            else {
+                $RCMAIL->output->command('command', 'list', $mbox_name);
+            }
+        }
+        private function _messageset_to_uids($messageset, $multifolder) {
+            $a_uids = array();
+
+            foreach ($messageset as $mbox => $uids) {
+                foreach ($uids as $uid) {
+                    $a_uids[] = $multifolder ? $uid . '-' . $mbox : $uid;
+                }
+            }
+
+            return $a_uids;
         }
     }
 

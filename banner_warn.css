@@ -127,3 +127,8 @@ ul.toolbarmenu li span.unknown {
     width: 2.5rem;
     margin-left: 1rem;
 }
+#message-objects div.notice.warning.reported {
+    background-color: #ff4d4d;
+    color: #000000;
+    background-position: 5px -87px;
+}
