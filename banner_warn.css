@@ -117,3 +117,13 @@ ul.toolbarmenu li span.known {
 ul.toolbarmenu li span.unknown {
     background-position: -2px -768px;
 }
+
+/* yes/no button for recognizing sender */
+.yes-button {
+    width: 2.5rem;
+    margin-left: 1rem;
+}
+.no-button {
+    width: 2.5rem;
+    margin-left: 1rem;
+}

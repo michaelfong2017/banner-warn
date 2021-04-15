@@ -48,7 +48,7 @@ var banner_warn = {
     }
 };
 
-rcube_webmail.prototype.markasknown_mark = function(is_known) {
+rcube_webmail.prototype.markasknown_mark = function(is_known, _sender) {
     var uids = this.env.uid ? [this.env.uid] : this.message_list.get_selection();
     // console.log(uids)
     if (!uids)
@@ -56,9 +56,14 @@ rcube_webmail.prototype.markasknown_mark = function(is_known) {
 
     var senders = []
     uids.forEach((uid) => {
-        var sender = rcmail.env.banner_avatar[uid]['from']
-        // console.log(sender)
-        senders.push(sender)
+        if (rcmail.env.banner_avatar !== undefined) {
+            var sender = rcmail.env.banner_avatar[uid]['from']
+            // console.log(sender)
+            senders.push(sender)
+        }
+        else {
+            senders.push(_sender)
+        }
     })
     
     
@@ -104,4 +109,12 @@ window.rcmail && rcmail.addEventListener('init', function(evt) {
                 }
             });
         }
+
+        /* yes/no button for recognizing sender */
+        $('.yes-button').click(function() {
+            rcmail.markasknown_mark(true, $('.yes-button').attr('sender'));
+        });
+        $('.no-button').click(function() {
+            rcmail.markasknown_mark(false, $('.no-button').attr('sender'));
+        });
 });
