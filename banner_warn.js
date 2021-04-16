@@ -51,6 +51,8 @@ var banner_warn = {
 rcube_webmail.prototype.markasknown_mark = function(is_known, _sender) {
     var uids = this.env.uid ? [this.env.uid] : this.message_list.get_selection();
     // console.log(uids)
+    // console.log(rcmail.env)
+
     if (!uids)
         return;
 
@@ -91,6 +93,13 @@ rcube_webmail.prototype.rcmail_markasjunk2_move = function(mbox, uids) {
     this.env.uid = prev_uid;
 }
 
+rcube_webmail.prototype.hide_warning = function(hide_warning) {
+    console.log(hide_warning)
+    if (hide_warning) {
+        $(".notice.warning").css("display", "none");
+    }
+}
+
 window.rcmail && rcmail.addEventListener('init', function(evt) {
         rcmail.register_command('plugin.markasknown.known', function() { rcmail.markasknown_mark(true); }, rcmail.env.uid);
         rcmail.register_command('plugin.markasknown.unknown', function() { rcmail.markasknown_mark(false); }, rcmail.env.uid);
@@ -115,10 +124,14 @@ window.rcmail && rcmail.addEventListener('init', function(evt) {
             }
 
             rcmail.message_list.addEventListener('select', function(list) {
-                rcmail.enable_command('plugin.markasknown.known', list.get_selection(false).length > 0);
-                rcmail.enable_command('plugin.markasknown.unknown', list.get_selection(false).length > 0);
+                var enable = list.get_selection(false).length > 0
+                && rcmail.env.mailbox !== 'Junk' && rcmail.env.mailbox !== 'Trash'
+                && rcmail.env.mailbox !== 'Drafts' && rcmail.env.mailbox !== 'Sent'
 
-                if (list.get_selection(false).length > 0) {
+                rcmail.enable_command('plugin.markasknown.known', enable);
+                rcmail.enable_command('plugin.markasknown.unknown', enable);
+
+                if (enable) {
                     $("#markasknown").addClass("active")
                     $("#markasunknown").addClass("active")
                 }
@@ -134,6 +147,7 @@ window.rcmail && rcmail.addEventListener('init', function(evt) {
         let sender = $('.yes-button').attr('sender')
         $('.yes-button').click(function() {
             rcmail.markasknown_mark(true, sender);
+            $(".notice.warning").css("display", "none");
         });
         $('.no-button').click(function() {
             $(".notice.warning").addClass("reported")

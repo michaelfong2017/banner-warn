@@ -244,10 +244,15 @@
             $is_known ? $this->_known($messageset, $senders) : $this->_unknown($messageset, $senders);
 
             if (!is_null($is_known)) {
+                /* Display message */
                 $display_message = 'Sender(s) address marked as ' . ($is_known ? 'known' : 'unknown') . ' successfully.';
                 $RCMAIL->output->command('display_message', $RCMAIL->gettext($display_message));
             }
 
+            /* Update the content part immediately */
+            $RCMAIL->output->command('hide_warning', $is_known);
+
+            // Must be put at the last line
             $RCMAIL->output->send();
         }
 
