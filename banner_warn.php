@@ -124,7 +124,7 @@
             if (substr($output, 0, strlen('KNOWN')) !== 'KNOWN') { // case-sensitive
                 if ($mbox_name !== 'Drafts' && $mbox_name !== 'Sent') {
                     if ($mbox_name === 'Junk' || $mbox_name === 'Trash') {
-                        array_push($content, '<div class="notice warning reported" style="white-space: pre-wrap;">' . "Reported as spam!" . '</div>');
+                        array_push($content, '<div class="notice warning reported" style="white-space: pre-wrap;">' . "Reported as junk!" . '</div>');
                     }
                     // INBOX only by default
                     else {
@@ -139,7 +139,7 @@
             else {
                 if ($mbox_name !== 'Drafts' && $mbox_name !== 'Sent') {
                     if ($mbox_name === 'Junk' || $mbox_name === 'Trash') {
-                        array_push($content, '<div class="notice warning reported" style="white-space: pre-wrap;">' . "Reported as spam!" . '</div>');
+                        array_push($content, '<div class="notice warning reported" style="white-space: pre-wrap;">' . "Reported as junk!" . '</div>');
                     }
                     // INBOX only by default
                     else {

@@ -82,15 +82,17 @@ rcube_webmail.prototype.markasknown_report = function(_uid, _sender) {
 }
 
 rcube_webmail.prototype.rcmail_markasjunk2_move = function(mbox, uids) {
-    var prev_uid = this.env.uid, a_uids = $.isArray(uids) ? uids : uids.split(",");
+    var rcmail = window.parent.rcmail
 
-    if (this.message_list && a_uids.length == 1 && !this.message_list.in_selection([a_uids[0]]))
-        this.env.uid = a_uids[0];
+    var prev_uid = rcmail.env.uid, a_uids = $.isArray(uids) ? uids : uids.split(",");
+
+    if (rcmail.message_list && a_uids.length == 1 && !rcmail.message_list.in_selection([a_uids[0]]))
+    rcmail.env.uid = a_uids[0];
 
     if (mbox)
-        this.move_messages(mbox);
+        rcmail.move_messages(mbox);
 
-    this.env.uid = prev_uid;
+    rcmail.env.uid = prev_uid;
 }
 
 rcube_webmail.prototype.hide_warning = function(hide) {
@@ -168,7 +170,7 @@ window.rcmail && rcmail.addEventListener('init', function(evt) {
         });
         $('.no-button').click(function() {
             $(".notice.warning").addClass("reported")
-            $(".notice.warning").text("Reported as spam!")
+            $(".notice.warning").text("Reported as junk!")
             rcmail.markasknown_report(uid, sender);
         });
 });
