@@ -120,6 +120,7 @@
             $command = 'cd plugins/banner_warn/helloworld;' . escapeshellcmd('python3 start.py ' . $task . ' ' . $sender_address);
             $output = exec($command);
 
+            // Create and display warning banner
             if (substr($output, 0, strlen('KNOWN')) !== 'KNOWN') { // case-sensitive
                 if ($mbox_name !== 'Drafts' && $mbox_name !== 'Sent') {
                     if ($mbox_name === 'Junk' || $mbox_name === 'Trash') {
@@ -128,6 +129,21 @@
                     // INBOX only by default
                     else {
                         array_push($content, '<div class="notice warning" style="white-space: pre-wrap;">' . $sender_address . " originated from outside of your organization. Do not click links or open attachments unless you recognize the sender and know the content is safe.\n\nWould you like to recognize and trust " . $sender_address . "?"
+                        . '<button class="yes-button" uid=' . $uid . ' sender=' . $sender_address . ' type="button">Yes</button>'
+                        . '<button class="no-button" uid=' . $uid . ' sender=' . $sender_address . ' type="button">No</button>'
+                        . '</div>');
+                    }
+                }
+            }
+            // Still create but don't display warning banner
+            else {
+                if ($mbox_name !== 'Drafts' && $mbox_name !== 'Sent') {
+                    if ($mbox_name === 'Junk' || $mbox_name === 'Trash') {
+                        array_push($content, '<div class="notice warning reported" style="white-space: pre-wrap;">' . "Reported as spam!" . '</div>');
+                    }
+                    // INBOX only by default
+                    else {
+                        array_push($content, '<div class="notice warning" style="white-space: pre-wrap; display: none;">' . $sender_address . " originated from outside of your organization. Do not click links or open attachments unless you recognize the sender and know the content is safe.\n\nWould you like to recognize and trust " . $sender_address . "?"
                         . '<button class="yes-button" uid=' . $uid . ' sender=' . $sender_address . ' type="button">Yes</button>'
                         . '<button class="no-button" uid=' . $uid . ' sender=' . $sender_address . ' type="button">No</button>'
                         . '</div>');

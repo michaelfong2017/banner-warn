@@ -93,10 +93,28 @@ rcube_webmail.prototype.rcmail_markasjunk2_move = function(mbox, uids) {
     this.env.uid = prev_uid;
 }
 
-rcube_webmail.prototype.hide_warning = function(hide_warning) {
-    console.log(hide_warning)
-    if (hide_warning) {
-        $(".notice.warning").css("display", "none");
+rcube_webmail.prototype.hide_warning = function(hide) {
+    if (hide) {
+        var iframe = document.getElementById("messagecontframe")
+        // Press button outside iframe
+        if (iframe !== null) {
+            iframe.contentWindow.document.getElementsByClassName("notice warning")[0].style.display = "none"
+        }
+        // Press button inside iframe
+        else {
+            document.getElementsByClassName("notice warning")[0].style.display = "none"
+        }
+    }
+    else {
+        var iframe = document.getElementById("messagecontframe")
+        // Press button outside iframe
+        if (iframe !== null) {
+            iframe.contentWindow.document.getElementsByClassName("notice warning")[0].style.display = "block"
+        }
+        // Press button inside iframe
+        else {
+            document.getElementsByClassName("notice warning")[0].style.display = "block"
+        }
     }
 }
 
@@ -147,7 +165,6 @@ window.rcmail && rcmail.addEventListener('init', function(evt) {
         let sender = $('.yes-button').attr('sender')
         $('.yes-button').click(function() {
             rcmail.markasknown_mark(true, sender);
-            $(".notice.warning").css("display", "none");
         });
         $('.no-button').click(function() {
             $(".notice.warning").addClass("reported")
