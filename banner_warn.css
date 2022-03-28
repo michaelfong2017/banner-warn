@@ -111,11 +111,11 @@ th.banner-warn {
 }
 
 /* markmenu new buttons */
-ul.toolbarmenu li span.known {
-    background-position: -2px -792px;
+ul.menu li a.known::before {
+    content: "\f118";
 }
-ul.toolbarmenu li span.unknown {
-    background-position: -2px -768px;
+ul.menu li a.unknown::before {
+    content: "\f11a";
 }
 
 /* yes/no button for recognizing sender */
