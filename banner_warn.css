@@ -120,11 +120,11 @@ ul.menu li a.unknown::before {
 
 /* yes/no button for recognizing sender */
 .yes-button {
-    width: 2.5rem;
+    width: 4rem;
     margin-left: 1rem;
 }
 .no-button {
-    width: 2.5rem;
+    width: 4rem;
     margin-left: 1rem;
 }
 #message-objects div.notice.warning.reported {

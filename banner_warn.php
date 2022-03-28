@@ -130,10 +130,10 @@
                     }
                     // INBOX only by default
                     else {
-                        array_push($content, '<div class="notice warning" style="white-space: pre-wrap;">' . $sender_address . " originated from outside of your organization. Do not click links or open attachments unless you recognize the sender and know the content is safe.\n\nWould you like to recognize and trust " . $sender_address . "?"
+                        array_push($content, '<div class="notice warning" style="white-space: pre-wrap;"><p>' . $sender_address . " originated from outside of your organization. Do not click links or open attachments unless you recognize the sender and know the content is safe.\n\nWould you like to recognize and trust " . $sender_address . "?    "
                         . '<button class="yes-button" uid=' . $uid . ' sender=' . $sender_address . ' type="button">Yes</button>'
                         . '<button class="no-button" uid=' . $uid . ' sender=' . $sender_address . ' type="button">No</button>'
-                        . '</div>');
+                        . '</p></div>');
                     }
                 }
             }
