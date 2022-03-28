@@ -107,7 +107,7 @@
             }
 
             // Warn users if mail from outside organization
-            $task = 'CHECK';
+            $command = 'is-known-sender';
             $uid = $message->uid;
             $sender_address = $message->sender['mailto'];
             $mbox_name  = rcube_utils::get_input_value('_mbox', rcube_utils::INPUT_GET);
@@ -117,8 +117,10 @@
             // $source_mbox = 'INBOX';
             // $flags = $storage->list_flags($source_mbox, [$uid]);
             
-            $command = 'cd plugins/banner_warn/helloworld;' . escapeshellcmd('python3 start.py ' . $task . ' ' . $sender_address);
-            $output = exec($command);
+            $data = array("sender_address" => $sender_address);
+
+            $output = $this->_make_request("POST", "localhost:8000/" . $command, $data);
+            rcmail::console('$output: ' .print_r($output,1));
 
             // Create and display warning banner
             if (substr($output, 0, strlen('KNOWN')) !== 'KNOWN') { // case-sensitive
@@ -279,11 +281,13 @@
             foreach ($messageset as $source_mbox => &$uids) {
                 // rcmail::console('$source_mbox: ' .print_r($source_mbox,1));
 
-                $task = 'SETKNOWN';
+                $command = 'set-known-sender';
                 $sender_addresses = implode(";", $senders);
-                $command = 'cd plugins/banner_warn/helloworld;' . escapeshellcmd('python3 start.py ' . $task . ' ' . $sender_addresses);
-                // rcmail::console('$command: ' .print_r($command,1));
-                $output = exec($command);
+                
+                $data = array("sender_addresses" => $sender_addresses);
+
+                $output = $this->_make_request("POST", "localhost:8000/" . $command, $data);
+                rcmail::console('$output: ' .print_r($output,1));
             }
         }
         private function _unknown(&$messageset, &$senders) {
@@ -293,11 +297,13 @@
             foreach ($messageset as $source_mbox => &$uids) {
                 // rcmail::console('$source_mbox: ' .print_r($source_mbox,1));
 
-                $task = 'SETUNKNOWN';
+                $command = 'set-unknown-sender';
                 $sender_addresses = implode(";", $senders);
-                $command = 'cd plugins/banner_warn/helloworld;' . escapeshellcmd('python3 start.py ' . $task . ' ' . $sender_addresses);
-                // rcmail::console('$command: ' .print_r($command,1));
-                $output = exec($command);
+                
+                $data = array("sender_addresses" => $sender_addresses);
+
+                $output = $this->_make_request("POST", "localhost:8000/" . $command, $data);
+                rcmail::console('$output: ' .print_r($output,1));
             }
         }
 
@@ -347,6 +353,41 @@
             }
 
             return $a_uids;
+        }
+
+        private function _make_request($method, $url, $data = false)
+        {
+            $curl = curl_init();
+
+            switch ($method)
+            {
+                case "POST":
+                    curl_setopt($curl, CURLOPT_POST, 1);
+
+                    if ($data)
+                        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: multipart/form-data'));
+                    break;
+                case "PUT":
+                    curl_setopt($curl, CURLOPT_PUT, 1);
+                    break;
+                default:
+                    if ($data)
+                        $url = sprintf("%s?%s", $url, http_build_query($data));
+            }
+
+            // Optional Authentication:
+            // curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+            // curl_setopt($curl, CURLOPT_USERPWD, "username:password");
+
+            curl_setopt($curl, CURLOPT_URL, $url);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+            $result = curl_exec($curl);
+
+            curl_close($curl);
+
+            return $result;
         }
     }
 
